@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        >
+		<TextView android:text="From"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			/>
+		<EditText android:id="@+id/txtStartLat"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:numeric="decimal|signed"
+            android:singleLine="true"
+            android:width="120dp"
+			/>
+		<TextView android:text="°N"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			/>
+		<EditText android:id="@+id/txtStartLong"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:numeric="decimal|signed"
+            android:singleLine="true"
+            android:width="120dp"
+			/>
+		<TextView android:text="°E"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        >
+		<TextView android:text="To"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			/>
+		<EditText android:id="@+id/txtDestLat"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:numeric="decimal|signed"
+            android:singleLine="true"
+            android:width="120dp"
+            android:text="40.326352"
+			/>
+		<TextView android:text="°N"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			/>
+		<EditText android:id="@+id/txtDestLong"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:numeric="decimal|signed"
+            android:singleLine="true"
+            android:width="120dp"
+            android:text="-111.720464"
+			/>
+		<TextView android:text="°E"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			/>
+    </LinearLayout>
+    <Button android:id="@+id/btnFindRoute" android:text="Find Route"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    <ListView android:id="@+id/lstDirections"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        />
+</LinearLayout>
+<!-- vim: set ts=4 sw=4 et :-->
