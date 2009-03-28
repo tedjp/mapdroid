@@ -24,8 +24,9 @@ public class Picker extends Activity
 {
     private static final String TAG = "RoutedPicker";
     private ArrayAdapter<RoutePoint> raa;
+    /*
     private TileServer tileServer = new TileServer();
-    private int zoom = 15;
+    */
 
     public class FindRouteButtonHandler implements View.OnClickListener {
         @Override
@@ -35,11 +36,19 @@ public class Picker extends Activity
                 return;
             }
 
+            MapView map = (MapView) findViewById(R.id.mapView);
+            map.setCenter(
+                    Float.parseFloat(((TextView)findViewById(R.id.txtStartLat)).getText().toString()),
+                    Float.parseFloat(((TextView)findViewById(R.id.txtStartLong)).getText().toString()));
+
+            /*
             ((ImageView)findViewById(R.id.imgTile)).setImageBitmap(tileServer.getTile(zoom,
                     Float.parseFloat(((TextView)findViewById(R.id.txtStartLat)).getText().toString()),
                     Float.parseFloat(((TextView)findViewById(R.id.txtStartLong)).getText().toString())));
+                    */
 
 
+            /*
             // Build the request
             // XXX: This is the wrong place to build the URI.
             StringBuilder sburi = new StringBuilder(150);
@@ -65,6 +74,7 @@ public class Picker extends Activity
             ListView lv = (ListView)findViewById(R.id.lstDirections);
             lv.setAdapter((ListAdapter)raa);
             raa.notifyDataSetChanged();
+            */
         }
 
         public void appendField(StringBuilder str, TextView txt) {
