@@ -11,10 +11,12 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.lang.String;
 import java.net.URL;
 import org.apache.http.impl.client.DefaultHttpClient;
 
@@ -22,6 +24,8 @@ public class Picker extends Activity
 {
     private static final String TAG = "RoutedPicker";
     private ArrayAdapter<RoutePoint> raa;
+    private TileServer tileServer = new TileServer();
+    private int zoom = 15;
 
     public class FindRouteButtonHandler implements View.OnClickListener {
         @Override
@@ -31,7 +35,13 @@ public class Picker extends Activity
                 return;
             }
 
+            ((ImageView)findViewById(R.id.imgTile)).setImageBitmap(tileServer.getTile(zoom,
+                    Float.parseFloat(((TextView)findViewById(R.id.txtStartLat)).getText().toString()),
+                    Float.parseFloat(((TextView)findViewById(R.id.txtStartLong)).getText().toString())));
+
+
             // Build the request
+            // XXX: This is the wrong place to build the URI.
             StringBuilder sburi = new StringBuilder(150);
             sburi.append("http://routes.cloudmade.com/12d497bd108850b885b14af7567174fd/api/0.3/");
             // Fields have already been validated, so use the raw strings
