@@ -21,6 +21,7 @@ class TileSet {
     private ArrayList<String> servers;
     private String pathPrefix;
     private int maxZoomLevel;
+    private int tileSize = 256; /* in pixels */
 
     public TileSet() {
         servers = new ArrayList<String>(3);
@@ -28,15 +29,32 @@ class TileSet {
         maxZoomLevel = 17;
     }
 
+    public static int getXPixel(int zoom, float longitude, int tileWidth) {
+        return Math.round(getXTileNumberAsFloat(zoom, longitude) % 1 * tileWidth);
+    }
+
+    public static int getYPixel(int zoom, float latitude, int tileHeight) {
+        return Math.round(getYTileNumberAsFloat(zoom, latitude) % 1 * tileHeight);
+    }
+
+    public static float getXTileNumberAsFloat(int zoom, float longitude) {
+        return ((longitude + 180) / 360) * (1 << zoom);
+    }
+
+    public static float getYTileNumberAsFloat(int zoom, float latitude) {
+        return (int)Math.floor((1 - Math.log(Math.tan(latitude * Math.PI / 180) + 1 / Math.cos(latitude * Math.PI / 180)) / Math.PI) / 2 * (1 << zoom));
+    }
+
     // XXX: Floats are slow. Provide interface for mega-degrees (int)?
     // Another optimisation: save precomputed 2^[1-17] in an array
     // rather than using expensive Math.pow() float operations
     public static int getXTileNumber(int zoom, float longitude) {
-        return (int)Math.floor(((longitude + 180) / 360) * (1 << zoom));
+        return (int)Math.floor(getXTileNumberAsFloat(zoom, longitude));
     }
 
+    // See getXTileNumber
     public static int getYTileNumber(int zoom, float latitude) {
-        return (int)Math.floor((1 - Math.log(Math.tan(latitude * Math.PI / 180) + 1 / Math.cos(latitude * Math.PI / 180)) / Math.PI) / 2 * (1 << zoom));
+        return (int)Math.floor(getYTileNumberAsFloat(zoom, latitude));
     }
 
     public void addServer(String hostname) {
@@ -63,6 +81,10 @@ class TileSet {
         sb.append(String.format("/%d/%d/%d.png", zoom, x, y));
 
         return sb.toString();
+    }
+
+    public int getTileSize() {
+        return tileSize;
     }
 }
 

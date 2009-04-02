@@ -73,18 +73,14 @@
         android:layout_height="wrap_content" />
     <au.id.tedp.routed.MapView
         android:id="@+id/mapView"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        />
-<!--
-    <ImageView android:id="@+id/imgTile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        />
+        /><!-- probably want to fill_parent at some point -->
+    <!--
     <ListView android:id="@+id/lstDirections"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         />
--->
+    -->
 </LinearLayout>
 <!-- vim: set ts=4 sw=4 et :-->

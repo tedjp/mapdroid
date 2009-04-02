@@ -24,9 +24,6 @@ public class Picker extends Activity
 {
     private static final String TAG = "RoutedPicker";
     private ArrayAdapter<RoutePoint> raa;
-    /*
-    private TileServer tileServer = new TileServer();
-    */
 
     public class FindRouteButtonHandler implements View.OnClickListener {
         @Override
@@ -41,14 +38,6 @@ public class Picker extends Activity
                     Float.parseFloat(((TextView)findViewById(R.id.txtStartLat)).getText().toString()),
                     Float.parseFloat(((TextView)findViewById(R.id.txtStartLong)).getText().toString()));
 
-            /*
-            ((ImageView)findViewById(R.id.imgTile)).setImageBitmap(tileServer.getTile(zoom,
-                    Float.parseFloat(((TextView)findViewById(R.id.txtStartLat)).getText().toString()),
-                    Float.parseFloat(((TextView)findViewById(R.id.txtStartLong)).getText().toString())));
-                    */
-
-
-            /*
             // Build the request
             // XXX: This is the wrong place to build the URI.
             StringBuilder sburi = new StringBuilder(150);
@@ -61,6 +50,7 @@ public class Picker extends Activity
             // FIXME: Allow selection of non-car routes
             sburi.append("/car.gpx");
 
+            /*
             CloudRoute route = new CloudRoute();
             try {
                 route.request(new URL(sburi.toString()));
