@@ -42,7 +42,8 @@ class TileSet {
     }
 
     public static float getYTileNumberAsFloat(int zoom, float latitude) {
-        return (int)Math.floor((1 - Math.log(Math.tan(latitude * Math.PI / 180) + 1 / Math.cos(latitude * Math.PI / 180)) / Math.PI) / 2 * (1 << zoom));
+        double lat = (double) latitude;
+        return (float)((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * (1 << zoom));
     }
 
     public static float getLongitude(int zoom, float centerPixelX) {
