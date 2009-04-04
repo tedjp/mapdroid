@@ -34,7 +34,7 @@ public class Picker extends Activity
             }
 
             MapView map = (MapView) findViewById(R.id.mapView);
-            map.setCenter(
+            map.setCenterCoords(
                     Float.parseFloat(((TextView)findViewById(R.id.txtStartLat)).getText().toString()),
                     Float.parseFloat(((TextView)findViewById(R.id.txtStartLong)).getText().toString()));
 

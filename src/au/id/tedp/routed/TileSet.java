@@ -45,6 +45,14 @@ class TileSet {
         return (int)Math.floor((1 - Math.log(Math.tan(latitude * Math.PI / 180) + 1 / Math.cos(latitude * Math.PI / 180)) / Math.PI) / 2 * (1 << zoom));
     }
 
+    public static float getLongitude(int zoom, float centerPixelX) {
+        return (float)(centerPixelX / (1 << zoom) * 360.0 - 180.0);
+    }
+
+    public static float getLatitude(int zoom, float centerPixelY) {
+        return (float)(Math.atan(Math.sinh(Math.PI * (1 - 2 * (double)centerPixelY / (1 << zoom)))) * 180 / Math.PI);
+    }
+
     // XXX: Floats are slow. Provide interface for mega-degrees (int)?
     // Another optimisation: save precomputed 2^[1-17] in an array
     // rather than using expensive Math.pow() float operations

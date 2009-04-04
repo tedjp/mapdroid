@@ -15,6 +15,9 @@ import java.lang.Float;
 class MapView extends View {
     private TileManager tileManager;
     private int zoom = 15;
+    // These are floats on purpose so we can derive the center *pixel*
+    // from the fractional tile number
+    private float centerTileX, centerTileY;
     private float mLat, mLong;
     private MotionHandler motionHandler;
     private GestureDetector gestureDetector;
@@ -52,25 +55,39 @@ class MapView extends View {
         return true;
     }
 
+    public void recalculateCenterPixel() {
+        centerTileX = TileSet.getXTileNumberAsFloat(zoom, mLong);
+        centerTileY = TileSet.getYTileNumberAsFloat(zoom, mLat);
+
+        Log.d("Routed", String.format("recalculated X pixel %f from longitude %f, Y pixel %f from latitude %f",
+                    centerTileX, mLong, centerTileY, mLat));
+    }
+
+    public void recalculateCoords() {
+        mLat = TileSet.getLatitude(zoom, centerTileY);
+        mLong = TileSet.getLongitude(zoom, centerTileX);
+
+        Log.d("Routed", String.format("recalculated latitude %f from %fpx, longitude %f from %fpx",
+                    mLat, centerTileY, mLong, centerTileX));
+    }
+
     public void onMove(float pixelsX, float pixelsY) {
-        Log.d("Routed", "onMove called");
-        if (pixelsX < 0)
-            mLat -= 0.002;
-        else if (pixelsX > 0)
-            mLat += 0.002;
-
-        if (pixelsY < 0)
-            mLong -= 0.002;
-        else if (pixelsY > 0)
-            mLong += 0.002;
-
+        Log.d("Routed", String.format("onMove called,X: %fpx, Y: %fpx", pixelsX, pixelsY));
+        centerTileX += pixelsX / tileManager.getTileSize();
+        centerTileY += pixelsY / tileManager.getTileSize();
+        recalculateCoords();
         invalidate();
     }
 
-    public void setCenter(float lat, float lon) {
-        Log.d("Routed", "setCenter called");
+    public void setCenterPixels(float pixelX, float pixelY) {
+        Log.d("Routed", "setCenterPixels called");
+    }
+
+    public void setCenterCoords(float lat, float lon) {
+        Log.d("Routed", "setCenterCoords called");
         mLat = lat;
         mLong = lon;
+        recalculateCenterPixel();
         invalidate();
     }
 
