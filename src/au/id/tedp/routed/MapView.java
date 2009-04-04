@@ -12,24 +12,59 @@ import android.view.View;
 import android.widget.TextView;
 import java.lang.Float;
 
-class MapView extends View /*implements GestureDetector.SimpleOnGestureListener*/ {
+class MapView extends View {
     private TileManager tileManager;
     private int zoom = 15;
     private float mLat, mLong;
-
-    // TODO: Implement onFling
-
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float velocityX,
-            float velocityY)
-    {
-        // Canvas.translate()
-        return false; // Unhandled, for now
-    }
+    private MotionHandler motionHandler;
+    private GestureDetector gestureDetector;
 
     public MapView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         tileManager = new TileManager();
+        motionHandler = new MotionHandler(this);
+        gestureDetector = new GestureDetector(motionHandler);
+        gestureDetector.setIsLongpressEnabled(false);
+        setMinimumHeight(256);
+        setMinimumWidth(256);
+    }
+
+    class MotionHandler extends GestureDetector.SimpleOnGestureListener {
+        MapView owner;
+
+        public MotionHandler(MapView owner) {
+            super();
+            this.owner = owner;
+        }
+
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float velocityX,
+                float velocityY)
+        {
+            owner.onMove(velocityX, velocityY);
+            return true;
+        }
+    }
+
+    public boolean onTouchEvent(MotionEvent ev) {
+        gestureDetector.onTouchEvent(ev);
+
+        return true;
+    }
+
+    public void onMove(float pixelsX, float pixelsY) {
+        Log.d("Routed", "onMove called");
+        if (pixelsX < 0)
+            mLat -= 0.002;
+        else if (pixelsX > 0)
+            mLat += 0.002;
+
+        if (pixelsY < 0)
+            mLong -= 0.002;
+        else if (pixelsY > 0)
+            mLong += 0.002;
+
+        invalidate();
     }
 
     public void setCenter(float lat, float lon) {
@@ -110,17 +145,6 @@ class MapView extends View /*implements GestureDetector.SimpleOnGestureListener*
             Log.e("Routed", "Failed to draw center tile");
         if (drawTileOnCanvas(rightTile, canvas) != true)
             Log.e("Routed", "Failed to draw right tile");
-    }
-
-    public boolean onTouchEvent(MotionEvent event) {
-        // XXX Hack: testing left/right scrolling
-        if (event.getX() < -1)
-            mLong -= 0.002;
-        else if (event.getX() > 1)
-            mLong += 0.002;
-
-        invalidate();
-        return true;
     }
 }
 
