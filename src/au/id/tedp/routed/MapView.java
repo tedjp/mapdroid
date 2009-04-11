@@ -3,6 +3,7 @@ package au.id.tedp.routed;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -93,18 +94,15 @@ class MapView extends View {
 
     // XXX: Only recalculate this when setCenter() is called, or the Canvas size changes
     // X Coordinate on the Canvas where (0,0) (top left) of the Center tile should be drawn
-    protected int getCenterTileOriginX(Canvas c) {
-        int x;
-        x = c.getWidth() / 2; // Center of canvas
+    protected Point getCenterTileOrigin(Canvas c) {
+        Rect clipBounds = c.getClipBounds();
+        int x, y;
+        // Center of visible canvas:
+        x = (clipBounds.right - clipBounds.left) / 2 + clipBounds.left;
+        y = (clipBounds.bottom - clipBounds.top) / 2 + clipBounds.top;
         x -= TileSet.getXPixel(zoom, mLong, tileManager.getTileSize());
-        return x - 160; // FIXME: World's biggest hack because I don't know how to make my view smaller
-    }
-    // Y Coordinate on the Canvas where (0,0) (top left) of the Center tile should be drawn
-    protected int getCenterTileOriginY(Canvas c) {
-        int y;
-        y = c.getHeight() / 2;
         y -= TileSet.getYPixel(zoom, mLat, tileManager.getTileSize());
-        return y - 220; // FIXME: World's biggest hack because I don't know how to make my view smaller
+        return new Point(x, y);
     }
 
     /**
@@ -120,11 +118,12 @@ class MapView extends View {
         }
 
         int tileSize = tileManager.getTileSize(); // Keep locally
+        Point centerTileOrigin = getCenterTileOrigin(canvas);
 
-        int thisTileOriginX = getCenterTileOriginX(canvas) +
+        int thisTileOriginX = centerTileOrigin.x +
             (tile.getXTileNumber() - TileSet.getXTileNumber(zoom, mLong)) * tileSize;
 
-        int thisTileOriginY = getCenterTileOriginY(canvas) +
+        int thisTileOriginY = centerTileOrigin.y +
             (tile.getYTileNumber() - TileSet.getYTileNumber(zoom, mLat)) * tileSize;
 
         // XXX: Does drawBitmap accept negative destination co-ords? If not we will
