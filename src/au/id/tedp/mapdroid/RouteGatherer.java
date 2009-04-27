@@ -1,4 +1,4 @@
-package au.id.tedp.routed;
+package au.id.tedp.mapdroid;
 
 public interface RouteGatherer {
     public void addPoint(RoutePoint p);

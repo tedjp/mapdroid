@@ -1,4 +1,4 @@
-package au.id.tedp.routed;
+package au.id.tedp.mapdroid;
 
 /* Based on examples/client/ClientWithResponseHandler.java from Apache HttpClient */
 /* A class for fetching *and* describing turn-by-turn routing instructions. */
@@ -50,7 +50,7 @@ public class CloudRoute implements RouteGatherer {
 	    xr.parse(new InputSource(url.openStream()));
 	} catch (Exception e) {
 	    /* FIXME: Provide user feedback */
-	    Log.e("RoutedCloudRoute", e.getMessage());
+	    Log.e("MapdroidCloudRoute", e.getMessage());
 	}
     }
 

@@ -1,12 +1,14 @@
-package au.id.tedp.routed;
+package au.id.tedp.mapdroid;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Debug;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -22,7 +24,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 public class Picker extends Activity
 {
-    private static final String TAG = "RoutedPicker";
     private ArrayAdapter<RoutePoint> raa;
 
     public class FindRouteButtonHandler implements View.OnClickListener {
@@ -104,11 +105,19 @@ public class Picker extends Activity
         }
     }
 
+    private void setMapLocation(float latitude, float longitude) {
+        MapView map = (MapView) findViewById(R.id.mapView);
+        map.setCenterCoords(latitude, longitude);
+    }
+
+    public static final String SAVED_LATITUDE_KEY = "map_center_latitude";
+    public static final String SAVED_LONGITUDE_KEY = "map_center_longitude";
+
     /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle savedInstanceState)
+    public void onCreate(Bundle savedState)
     {
-        super.onCreate(savedInstanceState);
+        super.onCreate(savedState);
         setContentView(R.layout.main);
 
         final Button btnFindRoute = (Button) findViewById(R.id.btnFindRoute);
@@ -117,15 +126,70 @@ public class Picker extends Activity
         // XXX: Use the location from the saved state
         // Add a button to select the current location rather than
         // setting it to the current location every time.
-        prefill_fields((Context)this);
+        //prefill_fields((Context)this);
 
-        //Debug.startMethodTracing("routed");
+        float newLat, newLong;
+
+        SharedPreferences settings = getPreferences(MODE_PRIVATE);
+
+        if (savedState != null) {
+            newLat = savedState.getFloat(SAVED_LATITUDE_KEY, (float)0.0);
+            newLong = savedState.getFloat(SAVED_LONGITUDE_KEY, (float)0.0);
+        } else if (settings != null) {
+            newLat = settings.getFloat(SAVED_LATITUDE_KEY, (float)0.0);
+            newLong = settings.getFloat(SAVED_LONGITUDE_KEY, (float)0.0);
+        } else {
+            newLat = (float)0.0;
+            newLong = (float)0.0;
+        }
+
+        MapView map = (MapView) findViewById(R.id.mapView);
+        map.setCenterCoords(newLat, newLong);
+        updateLocationFields();
+
+        //Debug.startMethodTracing("mapdroid");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        SharedPreferences settings = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor ed = settings.edit();
+
+        MapView map = (MapView) findViewById(R.id.mapView);
+
+        ed.putFloat(SAVED_LATITUDE_KEY, map.getLatitude());
+        ed.putFloat(SAVED_LONGITUDE_KEY, map.getLongitude());
+        ed.commit();
+    }
+
+    // XXX: Not sure whether this should be onSaveInstanceState or onPause
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        MapView map = (MapView) findViewById(R.id.mapView);
+        if (map == null)
+            return;
+
+        outState.putFloat(SAVED_LATITUDE_KEY, map.getLatitude());
+        outState.putFloat(SAVED_LONGITUDE_KEY, map.getLongitude());
     }
 
     @Override
     public void onDestroy() {
         //Debug.stopMethodTracing();
         super.onDestroy();
+    }
+
+    public void updateLocationFields() {
+        EditText txtStartLat = (EditText) findViewById(R.id.txtStartLat);
+        EditText txtStartLong = (EditText) findViewById(R.id.txtStartLong);
+
+        MapView map = (MapView) findViewById(R.id.mapView);
+        txtStartLat.setText(Float.toString(map.getLatitude()));
+        txtStartLong.setText(Float.toString(map.getLongitude()));
     }
 
     public void prefill_fields(Context ctx) {

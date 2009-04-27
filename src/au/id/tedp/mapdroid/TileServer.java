@@ -1,16 +1,28 @@
-package au.id.tedp.routed;
+package au.id.tedp.mapdroid;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 import java.net.URL;
 
-class TileManager {
+class TileServer {
     private TileSet tileset;
 
-    public TileManager() {
+    public TileServer() {
         tileset = new TileSet();
         tileset.addServer("a.tile.openstreetmap.org");
+        tileset.addServer("b.tile.openstreetmap.org");
+        tileset.addServer("c.tile.openstreetmap.org");
+    }
+
+    public void requestTile(int zoom, float latitude, float longitude)
+    {
+        /*
+        return getTile(
+                zoom,
+                TileSet.getXTileNumber(zoom, longitude),
+                TileSet.getYTileNumber(zoom, latitude));
+                */
     }
 
     public Tile getTile(int zoom, float latitude, float longitude)
@@ -32,7 +44,7 @@ class TileManager {
                     zoom, x, y);
         }
         catch (java.net.MalformedURLException e) {
-            Log.e("Routed", e.toString());
+            Log.e("Mapdroid", e.toString());
             return null;
         }
     }

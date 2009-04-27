@@ -1,4 +1,4 @@
-package au.id.tedp.routed;
+package au.id.tedp.mapdroid;
 
 /* Parses a GPX Route as described on
 http://developers.cloudmade.com/wiki/routing-http-api/Documentation
@@ -56,7 +56,7 @@ public class GpxRouteParser extends DefaultHandler {
     public void characters(char[] ch, int start, int length) {
         if (in_desc && point != null) {
             point.setDescription(new String(ch, start, length));
-            Log.d("RoutedGpxRouteParser", point.getDescription());
+            Log.d("MapdroidGpxRouteParser", point.getDescription());
         }
     }
 

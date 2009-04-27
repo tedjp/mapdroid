@@ -1,4 +1,4 @@
-package au.id.tedp.routed;
+package au.id.tedp.mapdroid;
 
 public class RoutePoint extends Object {
     private String desc;

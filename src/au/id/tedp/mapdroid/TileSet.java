@@ -1,6 +1,6 @@
 // TileSet: A single style of tile images that may be used side-by-side to
 // render a map.
-package au.id.tedp.routed;
+package au.id.tedp.mapdroid;
 
 // Tiles@Home:
 // http://b.tah.openstreetmap.org/Tiles/tile/17/24870/49479.png
@@ -22,12 +22,35 @@ class TileSet {
     private String pathPrefix;
     private int maxZoomLevel;
     private int tileSize = 256; /* in pixels */
+    private int nextServer = 0;
 
     public TileSet() {
         servers = new ArrayList<String>(3);
         pathPrefix = "";
         maxZoomLevel = 17;
     }
+
+    public synchronized String getUriForTile(int zoom, int x, int y) {
+        StringBuilder sb = new StringBuilder(128);
+        if (servers.isEmpty())
+            return null;
+
+        if (servers.size() <= nextServer)
+            nextServer = 0;
+
+        sb.append("http://");
+        sb.append(servers.get(nextServer)).append(pathPrefix);
+        ++nextServer;
+        sb.append(String.format("/%d/%d/%d.png", zoom, x, y));
+
+        return sb.toString();
+    }
+
+    public int getTileSize() {
+        return tileSize;
+    }
+
+
 
     public static int getXPixel(int zoom, float longitude, int tileWidth) {
         return Math.round(getXTileNumberAsFloat(zoom, longitude) % 1 * tileWidth);
@@ -66,7 +89,7 @@ class TileSet {
         return (int)Math.floor(getYTileNumberAsFloat(zoom, latitude));
     }
 
-    public void addServer(String hostname) {
+    public synchronized void addServer(String hostname) {
         servers.add(hostname);
     }
 //    public void removeServer(String hostname);
@@ -79,22 +102,6 @@ class TileSet {
         return pathPrefix;
     }
 
-    public String getUriForTile(int zoom, int x, int y) {
-        StringBuilder sb = new StringBuilder(128);
-        if (servers.isEmpty())
-            return null;
-
-        // XXX Hack: just choose the first server
-        sb.append("http://");
-        sb.append(servers.get(0)).append(pathPrefix);
-        sb.append(String.format("/%d/%d/%d.png", zoom, x, y));
-
-        return sb.toString();
-    }
-
-    public int getTileSize() {
-        return tileSize;
-    }
 }
 
 /* vim: set ts=4 sw=4 et :*/
