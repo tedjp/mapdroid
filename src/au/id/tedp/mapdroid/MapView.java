@@ -41,6 +41,21 @@ class MapView extends View {
         handler = new MapViewHandler();
     }
 
+    public int getZoom() {
+        return zoom;
+    }
+
+    public void setZoom(int newzoom) {
+        if (newzoom < 0 || newzoom > tileServer.getMaxZoom()) {
+            throw new IllegalArgumentException(String.format(
+                        "zoom level \"%d\" is outside the supported range (0 - %d)",
+                        newzoom, tileServer.getMaxZoom()));
+        }
+
+        zoom = newzoom;
+        invalidate();
+    }
+
     public float getLatitude() {
         return mLat;
     }
@@ -106,6 +121,8 @@ class MapView extends View {
     }
 
     public void onMove(float pixelsX, float pixelsY) {
+        // FIXME: (1) Don't allow scrolling so far off the map that it disappears
+        // FIXME: (2) Wrap the map to the left/right so it is continuous
         Log.d("Mapdroid", String.format("onMove called,X: %fpx, Y: %fpx", pixelsX, pixelsY));
         centerTileX += pixelsX / tileServer.getTileSize();
         centerTileY += pixelsY / tileServer.getTileSize();

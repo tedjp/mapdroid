@@ -15,6 +15,10 @@ class TileServer {
         tileset.addServer("c.tile.openstreetmap.org");
     }
 
+    public int getMaxZoom() {
+        return 18; /* umm... */
+    }
+
     public void requestTile(int zoom, float latitude, float longitude)
     {
         /*

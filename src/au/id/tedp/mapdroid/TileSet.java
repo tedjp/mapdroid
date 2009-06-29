@@ -27,7 +27,7 @@ class TileSet {
     public TileSet() {
         servers = new ArrayList<String>(3);
         pathPrefix = "";
-        maxZoomLevel = 17;
+        maxZoomLevel = 18;
     }
 
     public synchronized String getUriForTile(int zoom, int x, int y) {

@@ -9,6 +9,10 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Debug;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -26,85 +30,6 @@ public class Picker extends Activity
 {
     private ArrayAdapter<RoutePoint> raa;
 
-    public class FindRouteButtonHandler implements View.OnClickListener {
-        @Override
-        public void onClick(View v) {
-            if (!areCoordsValid()) {
-                Toast.makeText(v.getContext(), "Invalid coordinates", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            MapView map = (MapView) findViewById(R.id.mapView);
-            map.setCenterCoords(
-                    Float.parseFloat(((TextView)findViewById(R.id.txtStartLat)).getText().toString()),
-                    Float.parseFloat(((TextView)findViewById(R.id.txtStartLong)).getText().toString()));
-
-            // Build the request
-            // XXX: This is the wrong place to build the URI.
-            StringBuilder sburi = new StringBuilder(150);
-            sburi.append("http://routes.cloudmade.com/12d497bd108850b885b14af7567174fd/api/0.3/");
-            // Fields have already been validated, so use the raw strings
-            sburi.append(((TextView)findViewById(R.id.txtStartLat)).getText()).append(",");
-            sburi.append(((TextView)findViewById(R.id.txtStartLong)).getText()).append(",");
-            sburi.append(((TextView)findViewById(R.id.txtDestLat)).getText()).append(",");
-            sburi.append(((TextView)findViewById(R.id.txtDestLong)).getText());
-            // FIXME: Allow selection of non-car routes
-            sburi.append("/car.gpx");
-
-            /*
-            CloudRoute route = new CloudRoute();
-            try {
-                route.request(new URL(sburi.toString()));
-            } catch (Exception e) {
-                Toast.makeText(v.getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-
-            raa = new ArrayAdapter(v.getContext(), R.layout.list_item,
-                    route.getPoints());
-
-            ListView lv = (ListView)findViewById(R.id.lstDirections);
-            lv.setAdapter((ListAdapter)raa);
-            raa.notifyDataSetChanged();
-            */
-        }
-
-        public void appendField(StringBuilder str, TextView txt) {
-            str.append(txt.getText().toString());
-        }
-
-        /**
-          Validates the coordinates in the TextEdit fields.
-         */
-        public boolean areCoordsValid() {
-            return (   isValidCoord((TextView)findViewById(R.id.txtStartLat))
-                    && isValidCoord((TextView)findViewById(R.id.txtStartLong))
-                    && isValidCoord((TextView)findViewById(R.id.txtDestLat))
-                    && isValidCoord((TextView)findViewById(R.id.txtDestLong)));
-        }
-
-        /**
-          Determines whether the given TextView contains a valid coordinate.
-          That is, a floating point value between -180 and +180.
-          */
-        public boolean isValidCoord(TextView tv) {
-            final Float maxDegrees = new Float(180);
-            final Float minDegrees = new Float(-180);
-
-            Float f;
-
-            try {
-                f = Float.valueOf(tv.getText().toString());
-            } catch (NumberFormatException e) {
-                return false;
-            }
-
-            if (f.compareTo(maxDegrees) > 0 || f.compareTo(minDegrees) < 0)
-                return false;
-
-            return true;
-        }
-    }
-
     private void setMapLocation(float latitude, float longitude) {
         MapView map = (MapView) findViewById(R.id.mapView);
         map.setCenterCoords(latitude, longitude);
@@ -112,6 +37,7 @@ public class Picker extends Activity
 
     public static final String SAVED_LATITUDE_KEY = "map_center_latitude";
     public static final String SAVED_LONGITUDE_KEY = "map_center_longitude";
+    public static final String SAVED_ZOOM_KEY = "map_zoom";
 
     /** Called when the activity is first created. */
     @Override
@@ -120,8 +46,10 @@ public class Picker extends Activity
         super.onCreate(savedState);
         setContentView(R.layout.main);
 
+        /*
         final Button btnFindRoute = (Button) findViewById(R.id.btnFindRoute);
         btnFindRoute.setOnClickListener(new FindRouteButtonHandler());
+        */
 
         // XXX: Use the location from the saved state
         // Add a button to select the current location rather than
@@ -129,23 +57,30 @@ public class Picker extends Activity
         //prefill_fields((Context)this);
 
         float newLat, newLong;
+        int newZoom;
 
         SharedPreferences settings = getPreferences(MODE_PRIVATE);
 
+        // Default location: The Atlantic Ocean, somewhere between the
+        // United States and Europe
+        newLat = (float)25.0;
+        newLong = (float)-25.0;
+        newZoom = 2;
+
         if (savedState != null) {
-            newLat = savedState.getFloat(SAVED_LATITUDE_KEY, (float)0.0);
-            newLong = savedState.getFloat(SAVED_LONGITUDE_KEY, (float)0.0);
-        } else if (settings != null) {
-            newLat = settings.getFloat(SAVED_LATITUDE_KEY, (float)0.0);
-            newLong = settings.getFloat(SAVED_LONGITUDE_KEY, (float)0.0);
+            newLat = savedState.getFloat(SAVED_LATITUDE_KEY, newLat);
+            newLong = savedState.getFloat(SAVED_LONGITUDE_KEY, newLong);
+            newZoom = savedState.getInt(SAVED_ZOOM_KEY, newZoom);
         } else {
-            newLat = (float)0.0;
-            newLong = (float)0.0;
+            newLat = settings.getFloat(SAVED_LATITUDE_KEY, newLat);
+            newLong = settings.getFloat(SAVED_LONGITUDE_KEY, newLong);
+            newZoom = settings.getInt(SAVED_ZOOM_KEY, newZoom);
         }
 
         MapView map = (MapView) findViewById(R.id.mapView);
         map.setCenterCoords(newLat, newLong);
-        updateLocationFields();
+        //map.setZoom(newZoom);
+        //updateLocationFields();
 
         //Debug.startMethodTracing("mapdroid");
     }
@@ -183,27 +118,23 @@ public class Picker extends Activity
         super.onDestroy();
     }
 
-    public void updateLocationFields() {
-        EditText txtStartLat = (EditText) findViewById(R.id.txtStartLat);
-        EditText txtStartLong = (EditText) findViewById(R.id.txtStartLong);
-
+    // FIXME: Replace this with overlay handling like the Maps app
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
         MapView map = (MapView) findViewById(R.id.mapView);
-        txtStartLat.setText(Float.toString(map.getLatitude()));
-        txtStartLong.setText(Float.toString(map.getLongitude()));
-    }
+        int change = 0;
 
-    public void prefill_fields(Context ctx) {
-        Location loc = getLastLocation(ctx);
-        EditText txtStartLat = (EditText) findViewById(R.id.txtStartLat);
-        EditText txtStartLong = (EditText) findViewById(R.id.txtStartLong);
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)
+            change = -1;
+        else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP)
+            change = +1;
 
-        if (loc == null) {
-            txtStartLat.setText("");
-            txtStartLong.setText("");
-        } else {
-            txtStartLat.setText(String.format("%f", loc.getLatitude()));
-            txtStartLong.setText(String.format("%f", loc.getLongitude()));
+        if (change != 0) {
+            map.setZoom(map.getZoom() + change);
+            return true;
         }
+
+        return false;
     }
 
     public Location getLastLocation(Context ctx) {
@@ -230,6 +161,29 @@ public class Picker extends Activity
             return null;
 
         return String.format("%f,%f", loc.getLatitude(), loc.getLongitude());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater= getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.my_location:
+            Location loc = getLastLocation((Context)this);
+            // FIXME: Notify user if there is no location source
+            // or turn GPS on for them
+            if (loc != null) {
+                MapView map = (MapView) findViewById(R.id.mapView);
+                map.setCenterCoords((float)loc.getLatitude(), (float)loc.getLongitude());
+            }
+            return true;
+        }
+        return false;
     }
 }
 
