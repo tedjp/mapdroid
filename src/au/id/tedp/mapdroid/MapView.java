@@ -80,7 +80,7 @@ class MapView extends View {
         }
     }
 
-    protected Handler getHandler() {
+    public Handler getHandler() {
         return (Handler)handler;
     }
 
