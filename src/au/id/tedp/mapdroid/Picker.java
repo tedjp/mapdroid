@@ -97,6 +97,8 @@ public class Picker extends Activity
         ed.putFloat(SAVED_LATITUDE_KEY, map.getLatitude());
         ed.putFloat(SAVED_LONGITUDE_KEY, map.getLongitude());
         ed.commit();
+
+        map.stopLocationUpdates(this);
     }
 
     // XXX: Not sure whether this should be onSaveInstanceState or onPause
@@ -193,6 +195,14 @@ public class Picker extends Activity
             return true;
         }
         return false;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
+        map.startLocationUpdates(this);
     }
 }
 

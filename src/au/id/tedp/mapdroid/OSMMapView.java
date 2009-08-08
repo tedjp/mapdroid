@@ -49,13 +49,6 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
         setMinimumWidth(256);
         handler = new MapViewHandler();
         messenger = new Messenger(handler);
-
-        LocationManager locmgr = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        locmgr.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                0L, 0.0f, this);
-
-        locmgr.addGpsStatusListener(this);
     }
 
     public int getZoom() {
@@ -277,7 +270,20 @@ FIXME: use exceptions, dummy
         Log.d("Mapdroid", "onStatusChanged()");
     }
 
+    public void startLocationUpdates(Context context) {
+        LocationManager locmgr = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        locmgr.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                0L, 0.0f, this);
 
+        // XXX: Unnecessary
+//        locmgr.addGpsStatusListener(this);
+    }
+
+    public void stopLocationUpdates(Context context) {
+        LocationManager locmgr = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        locmgr.removeUpdates(this);
+    }
 }
 
 /* vim: set ts=4 sw=4 et :*/
