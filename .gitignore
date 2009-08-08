@@ -2,3 +2,4 @@ bin
 build.properties
 tags
 R.java
+local.properties

@@ -6,8 +6,14 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.os.Handler;
+import android.location.GpsStatus;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
 import android.os.Message;
+import android.os.Messenger;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -17,7 +23,7 @@ import android.widget.TextView;
 import java.lang.Float;
 import java.util.Vector;
 
-class MapView extends View {
+class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
     private TileServer tileServer;
     private int zoom = 15;
     // These are floats on purpose so we can derive the center *pixel*
@@ -28,17 +34,28 @@ class MapView extends View {
     private GestureDetector gestureDetector;
     private Vector<Vector<Tile>> visibleTiles;
     private MapViewHandler handler;
+    public Messenger messenger;
+    private Tile centerTile;
 
-    public MapView(Context context, AttributeSet attrs) {
+    public OSMMapView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         tileServer = new TileServer();
         motionHandler = new MotionHandler(this);
         gestureDetector = new GestureDetector(motionHandler);
         gestureDetector.setIsLongpressEnabled(false);
+        // XXX: Unnecessary, these should be removed unless they are advisory
         setMinimumHeight(256);
         setMinimumWidth(256);
         handler = new MapViewHandler();
+        messenger = new Messenger(handler);
+
+        LocationManager locmgr = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        locmgr.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                0L, 0.0f, this);
+
+        locmgr.addGpsStatusListener(this);
     }
 
     public int getZoom() {
@@ -65,9 +82,9 @@ class MapView extends View {
     }
 
     class MotionHandler extends GestureDetector.SimpleOnGestureListener {
-        MapView owner;
+        OSMMapView owner;
 
-        public MotionHandler(MapView owner) {
+        public MotionHandler(OSMMapView owner) {
             super();
             this.owner = owner;
         }
@@ -80,13 +97,19 @@ class MapView extends View {
         }
     }
 
-    public Handler getHandler() {
-        return (Handler)handler;
-    }
-
-    public static class MapViewHandler extends Handler {
+    // XXX: OK for this to be non-static? I guess.
+    public class MapViewHandler extends Handler {
         public void handleMessage(Message msg) {
             Log.d("Mapdroid", String.format("Received message: %s", msg.toString()));
+
+            if (msg.what == TileDownloader.RESULT_OK) {
+                // TODO: Store lots of tiles, check they are not out of date, etc.
+                centerTile = (Tile)msg.obj;
+                invalidate();
+            }
+
+            // Causes error.
+            //msg.recycle();
         }
     }
 
@@ -127,19 +150,23 @@ class MapView extends View {
         centerTileX += pixelsX / tileServer.getTileSize();
         centerTileY += pixelsY / tileServer.getTileSize();
         recalculateCoords();
-        invalidate();
+        centerTile = null;
+        //invalidate();
+        tileServer.requestTile(zoom, mLat, mLong, messenger);
     }
 
     public void setCenterPixels(float pixelX, float pixelY) {
-        Log.d("Mapdroid", "setCenterPixels called");
+        Log.d("Mapdroid", "setCenterPixels called (currently does nothing)");
     }
 
     public void setCenterCoords(float lat, float lon) {
-        Log.d("Mapdroid", "setCenterCoords called");
+        Log.d("Mapdroid", String.format("setCenterCoords: %f %f", lon, lat));
         mLat = lat;
         mLong = lon;
         recalculateCenterPixel();
-        invalidate();
+        centerTile = null;
+        //invalidate;
+        tileServer.requestTile(zoom, mLat, mLong, messenger);
     }
 
     // XXX: Only recalculate this when setCenter() is called, or the Canvas size changes
@@ -157,6 +184,7 @@ class MapView extends View {
 
     /**
       Returns true if the tile was drawn on the canvas, else false.
+FIXME: use exceptions, dummy
       */
     protected boolean drawTileOnCanvas(Tile tile, Canvas canvas) {
         if (tile.getZoom() != zoom) {
@@ -189,27 +217,67 @@ class MapView extends View {
 
     public void onDraw(Canvas canvas) {
         Log.d("Mapdroid", String.format("redrawing canvas of size %dx%d", canvas.getWidth(), canvas.getHeight()));
-        Tile centerTile, rightTile;
 
         canvas.drawColor(Color.LTGRAY);
+        if (centerTile != null) {
+            Log.d("Mapdroid", "Woo, centerTile was not null");
+            drawTileOnCanvas(centerTile, canvas);
+        } else {
+            Log.d("Mapdroid", "No center tile");
+        }
+        /*
         Rect clipbounds = canvas.getClipBounds();
-
         Log.d("Mapdroid", String.format("Clip bounds: %d,%d %d,%d", clipbounds.left, clipbounds.top, clipbounds.right, clipbounds.bottom));
+        */
+        // TODO: Calculate explicit tile numbers so we can request the adjacent tiles
+        //tileServer.requestTile(zoom, centerTile.getXTileNumber() + 1, centerTile.getYTileNumber(), messenger);
 
         // FIXME: For now we just grab the center tile
-        try {
-            centerTile = tileServer.getTile(zoom, mLat, mLong);
-            rightTile = tileServer.getTile(zoom, centerTile.getXTileNumber() + 1, centerTile.getYTileNumber());
-        } catch (java.io.IOException e) {
+        //try {
+        //    centerTile = tileServer.getTile(zoom, mLat, mLong, messenger);
+        //    rightTile = tileServer.getTile(zoom, centerTile.getXTileNumber() + 1, centerTile.getYTileNumber(), messenger);
+        //} catch (java.io.IOException e) {
             // TODO: Load a default "tile unavailable" tile
             // For now, just return.
-            return;
-        }
+        //    return;
+        //}
+        /*
         if (drawTileOnCanvas(centerTile, canvas) != true)
             Log.e("Mapdroid", "Failed to draw center tile");
         if (drawTileOnCanvas(rightTile, canvas) != true)
             Log.e("Mapdroid", "Failed to draw right tile");
+        */
     }
+
+    public void onGpsStatusChanged(int event) {
+        Log.d("Mapdroid", String.format("GPS status changed, event: %d", event));
+    }
+
+
+    // LocationListener
+    @Override
+    public void onLocationChanged(Location location) {
+        Log.d("Mapdroid", "onLocationChanged()");
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Log.d("Mapdroid", "onProviderDisabled()");
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        Log.d("Mapdroid", "onProviderEnabled()");
+
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        Log.d("Mapdroid", "onStatusChanged()");
+    }
+
+
 }
 
 /* vim: set ts=4 sw=4 et :*/

@@ -31,7 +31,7 @@ public class Picker extends Activity
     private ArrayAdapter<RoutePoint> raa;
 
     private void setMapLocation(float latitude, float longitude) {
-        MapView map = (MapView) findViewById(R.id.mapView);
+        OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
         map.setCenterCoords(latitude, longitude);
     }
 
@@ -77,7 +77,7 @@ public class Picker extends Activity
             newZoom = settings.getInt(SAVED_ZOOM_KEY, newZoom);
         }
 
-        MapView map = (MapView) findViewById(R.id.mapView);
+        OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
         map.setCenterCoords(newLat, newLong);
         //map.setZoom(newZoom);
         //updateLocationFields();
@@ -92,7 +92,7 @@ public class Picker extends Activity
         SharedPreferences settings = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor ed = settings.edit();
 
-        MapView map = (MapView) findViewById(R.id.mapView);
+        OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
 
         ed.putFloat(SAVED_LATITUDE_KEY, map.getLatitude());
         ed.putFloat(SAVED_LONGITUDE_KEY, map.getLongitude());
@@ -104,7 +104,7 @@ public class Picker extends Activity
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        MapView map = (MapView) findViewById(R.id.mapView);
+        OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
         if (map == null)
             return;
 
@@ -121,7 +121,7 @@ public class Picker extends Activity
     // FIXME: Replace this with overlay handling like the Maps app
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        MapView map = (MapView) findViewById(R.id.mapView);
+        OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
         int change = 0;
 
         if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)
@@ -148,8 +148,11 @@ public class Picker extends Activity
         if (bestProvider == null)
             return null;
 
+        Log.d("Mapdroid", "Found a fine location provider");
+
         // XXX: Could be out-of-date or disabled
-        return locmgr.getLastKnownLocation(bestProvider);
+        //return locmgr.getLastKnownLocation(bestProvider);
+        return locmgr.getLastKnownLocation(LocationManager.GPS_PROVIDER);
     }
 
     // We probably want to require high-res (GPS) location rather than low-res
@@ -175,10 +178,16 @@ public class Picker extends Activity
         switch (item.getItemId()) {
         case R.id.my_location:
             Location loc = getLastLocation((Context)this);
+            if (loc == null) {
+                Log.d("Mapdroid", "Location is null");
+            } else {
+                Log.d("Mapdroid", "Location is not null");
+            }
             // FIXME: Notify user if there is no location source
             // or turn GPS on for them
             if (loc != null) {
-                MapView map = (MapView) findViewById(R.id.mapView);
+                OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
+                Log.d("MapView", map.toString());
                 map.setCenterCoords((float)loc.getLatitude(), (float)loc.getLongitude());
             }
             return true;

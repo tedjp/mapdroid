@@ -2,11 +2,31 @@ package au.id.tedp.mapdroid;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.os.Messenger;
 import android.util.Log;
 import java.net.URL;
 
-class TileServer {
+class TileServer extends Thread {
+    private Handler mHandler; // XXX: Example code makes this public
     private TileSet tileset;
+
+    public void run() {
+        Looper.prepare();
+
+        mHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                if (msg.obj == null)
+                    return;
+
+                // XXX: Do stuff.
+            }
+        };
+
+        Looper.loop();
+    }
 
     public TileServer() {
         tileset = new TileSet();
@@ -19,25 +39,25 @@ class TileServer {
         return 18; /* umm... */
     }
 
-    public void requestTile(int zoom, float latitude, float longitude)
-    {
-        /*
-        return getTile(
+    public void requestTile(int zoom, float latitude, float longitude, Messenger notify) {
+        requestTile(
                 zoom,
                 TileSet.getXTileNumber(zoom, longitude),
-                TileSet.getYTileNumber(zoom, latitude));
-                */
+                TileSet.getYTileNumber(zoom, latitude),
+                notify);
     }
 
-    public Tile getTile(int zoom, float latitude, float longitude)
-        throws java.io.IOException
-    {
-        return getTile(
-                zoom,
-                TileSet.getXTileNumber(zoom, longitude),
-                TileSet.getYTileNumber(zoom, latitude));
+    public void requestTile(int zoom, int x, int y, Messenger notify) {
+        Tile tile = new Tile(
+                tileset.getUriForTile(zoom, x, y),
+                zoom, x, y);
+
+        TileDownloader downloader = new TileDownloader(tile, notify);
+        Thread thr = new Thread(downloader, "TileDownloader");
+        thr.start();
     }
 
+    /*
     public Tile getTile(int zoom, int x, int y)
         throws java.io.IOException
     {
@@ -52,6 +72,7 @@ class TileServer {
             return null;
         }
     }
+    */
 
     public int getTileSize() {
         return tileset.getTileSize();
