@@ -36,11 +36,11 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
     private ArrayList<Tile> visibleTiles;
     private MapViewHandler handler;
     public Messenger messenger;
-    private Tile centerTile;
 
     public OSMMapView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
+        visibleTiles = new ArrayList<Tile>(6);
         tileServer = new TileServer();
         tileSize = tileServer.getTileSize();
 
@@ -93,8 +93,9 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
         }
     }
 
+    // XXX: Pretty sure this math is bogus
     public int getLeftTileNumber() {
-        return ((int) centerTileX) - getWidth() / 2 / tileSize;
+        return ((int) centerTileX) - getWidth() / 2 / tileSize - 1;
     }
 
     public int getRightTileNumber() {
@@ -102,17 +103,11 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
     }
 
     public int getTopTileNumber() {
-        return ((int) centerTileY) - getHeight() / 2 / tileSize;
+        return ((int) centerTileY) - getHeight() / 2 / tileSize - 1;
     }
 
     public int getBottomTileNumber() {
         return ((int) centerTileY) + getHeight() / 2 / tileSize + 1;
-    }
-
-    public boolean isTileVisible(Tile t) {
-        // FIXME: Stub
-        return true;
-
     }
 
     // XXX: OK for this to be non-static? I guess.
@@ -121,8 +116,7 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
             Log.d("Mapdroid", String.format("Received message: %s", msg.toString()));
 
             if (msg.what == TileDownloader.RESULT_OK) {
-                // TODO: Store lots of tiles, check they are not out of date, etc.
-                centerTile = (Tile)msg.obj;
+                visibleTiles.add((Tile)msg.obj);
                 invalidate();
             }
 
@@ -168,7 +162,6 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
         centerTileX += pixelsX / tileServer.getTileSize();
         centerTileY += pixelsY / tileServer.getTileSize();
         recalculateCoords();
-        centerTile = null;
 
         Log.d("Mapdroid", String.format("Left tile number: %d, right tile number: %d",
                     getLeftTileNumber(), getRightTileNumber()));
@@ -187,12 +180,13 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
         mLat = lat;
         mLong = lon;
         recalculateCenterPixel();
-        centerTile = null;
         getVisibleTiles();
     }
 
     private void getVisibleTiles() {
         int centerx, centery, x, y;
+
+        visibleTiles.clear();
 
         centerx = TileSet.getXTileNumber(zoom, mLong);
         centery = TileSet.getYTileNumber(zoom, mLat);
@@ -250,19 +244,23 @@ FIXME: use exceptions, dummy
         return true;
     }
 
-    protected void requestVisibleTiles(Canvas c) {
+    protected void drawVisibleTiles(Canvas canvas) {
+        int i;
 
+        for (i = 0; i < visibleTiles.size(); ++i) {
+            drawTileOnCanvas(visibleTiles.get(i), canvas);
+        }
     }
 
     public void onDraw(Canvas canvas) {
         Log.d("Mapdroid", String.format("redrawing canvas of size %dx%d", canvas.getWidth(), canvas.getHeight()));
 
         //canvas.drawColor(Color.LTGRAY);
-        if (centerTile != null) {
-            drawTileOnCanvas(centerTile, canvas);
-        } else {
-            Log.w("Mapdroid", "No center tile, requesting...");
+        if (visibleTiles.isEmpty()) {
+            Log.w("Mapdroid", "No tiles, requesting visible tiles...");
             getVisibleTiles();
+        } else {
+            drawVisibleTiles(canvas);
         }
         /*
         Rect clipbounds = canvas.getClipBounds();
