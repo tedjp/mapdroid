@@ -66,7 +66,8 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
         }
 
         zoom = newzoom;
-        invalidate();
+        recalculateCenterPixel();
+        getVisibleTiles();
     }
 
     public float getLatitude() {
