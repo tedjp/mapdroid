@@ -48,6 +48,8 @@ class TileServer extends Thread {
     }
 
     public void requestTile(int zoom, int x, int y, Messenger notify) {
+        Log.d("Mapdroid", String.format("Requested tile %d,%d", x, y));
+
         Tile tile = new Tile(
                 tileset.getUriForTile(zoom, x, y),
                 zoom, x, y);

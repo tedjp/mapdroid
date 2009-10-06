@@ -21,10 +21,11 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 import java.lang.Float;
-import java.util.Vector;
+import java.util.ArrayList;
 
 class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
     private TileServer tileServer;
+    private int tileSize;
     private int zoom = 15;
     // These are floats on purpose so we can derive the center *pixel*
     // from the fractional tile number
@@ -32,7 +33,7 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
     private float mLat, mLong;
     private MotionHandler motionHandler;
     private GestureDetector gestureDetector;
-    private Vector<Vector<Tile>> visibleTiles;
+    private ArrayList<Tile> visibleTiles;
     private MapViewHandler handler;
     public Messenger messenger;
     private Tile centerTile;
@@ -41,6 +42,8 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
         super(context, attrs);
 
         tileServer = new TileServer();
+        tileSize = tileServer.getTileSize();
+
         motionHandler = new MotionHandler(this);
         gestureDetector = new GestureDetector(motionHandler);
         gestureDetector.setIsLongpressEnabled(false);
@@ -88,6 +91,28 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
             owner.onMove(velocityX, velocityY);
             return true;
         }
+    }
+
+    public int getLeftTileNumber() {
+        return ((int) centerTileX) - getWidth() / 2 / tileSize;
+    }
+
+    public int getRightTileNumber() {
+        return ((int) centerTileX) + getWidth() / 2 / tileSize + 1;
+    }
+
+    public int getTopTileNumber() {
+        return ((int) centerTileY) - getHeight() / 2 / tileSize;
+    }
+
+    public int getBottomTileNumber() {
+        return ((int) centerTileY) + getHeight() / 2 / tileSize + 1;
+    }
+
+    public boolean isTileVisible(Tile t) {
+        // FIXME: Stub
+        return true;
+
     }
 
     // XXX: OK for this to be non-static? I guess.
@@ -144,8 +169,13 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
         centerTileY += pixelsY / tileServer.getTileSize();
         recalculateCoords();
         centerTile = null;
-        //invalidate();
-        tileServer.requestTile(zoom, mLat, mLong, messenger);
+
+        Log.d("Mapdroid", String.format("Left tile number: %d, right tile number: %d",
+                    getLeftTileNumber(), getRightTileNumber()));
+        Log.d("Mapdroid", String.format("Top tile number: %d, bottom tile number: %d",
+                    getTopTileNumber(), getBottomTileNumber()));
+
+        getVisibleTiles();
     }
 
     public void setCenterPixels(float pixelX, float pixelY) {
@@ -158,8 +188,25 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
         mLong = lon;
         recalculateCenterPixel();
         centerTile = null;
-        //invalidate;
-        tileServer.requestTile(zoom, mLat, mLong, messenger);
+        getVisibleTiles();
+    }
+
+    private void getVisibleTiles() {
+        int centerx, centery, x, y;
+
+        centerx = TileSet.getXTileNumber(zoom, mLong);
+        centery = TileSet.getYTileNumber(zoom, mLat);
+
+        // Center tile is most important; grab it first
+        tileServer.requestTile(zoom, centerx, centery, messenger);
+
+        for (x = getLeftTileNumber(); x <= getRightTileNumber(); ++x) {
+            for (y = getTopTileNumber(); y <= getBottomTileNumber(); ++y) {
+                // Don't re-request the center tile
+                if (x != centerx || y != centery)
+                    tileServer.requestTile(zoom, x, y, messenger);
+            }
+        }
     }
 
     // XXX: Only recalculate this when setCenter() is called, or the Canvas size changes
@@ -188,7 +235,6 @@ FIXME: use exceptions, dummy
             return false;
         }
 
-        int tileSize = tileServer.getTileSize(); // Keep locally
         Point centerTileOrigin = getCenterTileOrigin(canvas);
 
         int thisTileOriginX = centerTileOrigin.x +
@@ -211,12 +257,12 @@ FIXME: use exceptions, dummy
     public void onDraw(Canvas canvas) {
         Log.d("Mapdroid", String.format("redrawing canvas of size %dx%d", canvas.getWidth(), canvas.getHeight()));
 
-        canvas.drawColor(Color.LTGRAY);
+        //canvas.drawColor(Color.LTGRAY);
         if (centerTile != null) {
-            Log.d("Mapdroid", "Woo, centerTile was not null");
             drawTileOnCanvas(centerTile, canvas);
         } else {
-            Log.d("Mapdroid", "No center tile");
+            Log.w("Mapdroid", "No center tile, requesting...");
+            getVisibleTiles();
         }
         /*
         Rect clipbounds = canvas.getClipBounds();
