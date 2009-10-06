@@ -229,6 +229,13 @@ FIXME: use exceptions, dummy
             return false;
         }
 
+        Bitmap bmp = tile.getBitmap();
+
+        if (bmp == null) {
+            Log.d("Mapdroid", "Ignoring Tile without a Bitmap");
+            return false;
+        }
+
         Point centerTileOrigin = getCenterTileOrigin(canvas);
 
         int thisTileOriginX = centerTileOrigin.x +
@@ -237,7 +244,7 @@ FIXME: use exceptions, dummy
         int thisTileOriginY = centerTileOrigin.y +
             (tile.getYTileNumber() - TileSet.getYTileNumber(zoom, mLat)) * tileSize;
 
-        canvas.drawBitmap(tile.getBitmap(), null,
+        canvas.drawBitmap(bmp, null,
                 new Rect(thisTileOriginX, thisTileOriginY,
                     thisTileOriginX + tileSize, thisTileOriginY + tileSize), null);
 
