@@ -59,23 +59,6 @@ class TileServer extends Thread {
         thr.start();
     }
 
-    /*
-    public Tile getTile(int zoom, int x, int y)
-        throws java.io.IOException
-    {
-        try {
-            URL imgurl = new URL(tileset.getUriForTile(zoom, x, y));
-            return new Tile(
-                    BitmapFactory.decodeStream(imgurl.openStream()),
-                    zoom, x, y);
-        }
-        catch (java.net.MalformedURLException e) {
-            Log.e("Mapdroid", e.toString());
-            return null;
-        }
-    }
-    */
-
     public int getTileSize() {
         return tileset.getTileSize();
     }
