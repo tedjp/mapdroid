@@ -13,34 +13,44 @@ import java.net.URL;
 
 class TileDownloader implements Runnable {
     private Tile tile;
-    private Messenger recipient;
+    private Messenger recipientMessenger;
+    private TileCache recipientCache;
 
     public static final int RESULT_OK = 1;
     public static final int RESULT_ERROR = -1;
 
-    public TileDownloader(Tile tile, Messenger replyTo) {
+    public TileDownloader(Tile tile, Messenger replyTo, MemoryTileCache cacheTo) {
         this.tile = tile;
-        this.recipient = replyTo;
+        this.recipientMessenger = replyTo;
+        this.recipientCache = cacheTo;
+    }
+
+    public static Message buildNotification(Tile tile, boolean success) {
+        Message response = Message.obtain();
+        response.what = success ? RESULT_OK : RESULT_ERROR;
+        response.obj = tile;
+
+        return response;
     }
 
     public void run() {
-        Message response = Message.obtain();
-        response.what = RESULT_ERROR;
+        boolean succeeded = false;
 
         try {
             URL url = new URL(tile.getUrl());
 
             tile.setBitmap(BitmapFactory.decodeStream(url.openStream()));
-            response.obj = tile;
 
-            response.what = RESULT_OK;
+            recipientCache.add(tile);
+            succeeded = true;
         }
         catch (Exception e) {
             Log.e("Mapdroid BitmapDownloader", e.getMessage());
         }
         finally {
             try {
-                recipient.send(response);
+                Message response = buildNotification(tile, succeeded);
+                recipientMessenger.send(response);
             }
             catch (android.os.RemoteException e) {
                 Log.e("Mapdroid BitmapDownloader", e.getMessage());

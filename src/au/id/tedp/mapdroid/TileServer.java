@@ -12,6 +12,7 @@ import java.net.URL;
 class TileServer extends Thread {
     private Handler mHandler; // XXX: Example code makes this public
     private TileSet tileset;
+    private MemoryTileCache memTileCache;
 
     public void run() {
         Looper.prepare();
@@ -29,6 +30,7 @@ class TileServer extends Thread {
     }
 
     public TileServer() {
+        memTileCache = new MemoryTileCache();
         tileset = new TileSet();
         tileset.addServer("a.tile.openstreetmap.org");
         tileset.addServer("b.tile.openstreetmap.org");
@@ -47,14 +49,38 @@ class TileServer extends Thread {
                 notify);
     }
 
+    protected boolean provideTileFromCache(int zoom, int x, int y, Messenger notify) {
+        Tile tile = memTileCache.getTile(zoom, x, y);
+
+        if (tile == null) {
+            Log.d("Mapdroid", String.format("Tile %d,%d not provided from cache", x, y));
+            return false;
+        }
+
+        Log.d("Mapdroid", String.format("Tile %d,%d PROVIDED FROM CACHE", x, y));
+
+        Message response = TileDownloader.buildNotification(tile, true);
+        try {
+            notify.send(response);
+        }
+        catch (android.os.RemoteException e) {
+            Log.e("Mapdroid", e.toString());
+            return false;
+        }
+        return true;
+    }
+
     public void requestTile(int zoom, int x, int y, Messenger notify) {
         Log.d("Mapdroid", String.format("Requested tile %d,%d", x, y));
+
+        if (provideTileFromCache(zoom, x, y, notify))
+            return;
 
         Tile tile = new Tile(
                 tileset.getUriForTile(zoom, x, y),
                 zoom, x, y);
 
-        TileDownloader downloader = new TileDownloader(tile, notify);
+        TileDownloader downloader = new TileDownloader(tile, notify, memTileCache);
         Thread thr = new Thread(downloader, "TileDownloader");
         thr.start();
     }
