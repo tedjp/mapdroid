@@ -261,37 +261,12 @@ FIXME: use exceptions, dummy
     }
 
     public void onDraw(Canvas canvas) {
-        Log.d("Mapdroid", String.format("redrawing canvas of size %dx%d", canvas.getWidth(), canvas.getHeight()));
-
-        //canvas.drawColor(Color.LTGRAY);
         if (visibleTiles.isEmpty()) {
             Log.w("Mapdroid", "No tiles, requesting visible tiles...");
             getVisibleTiles();
         } else {
             drawVisibleTiles(canvas);
         }
-        /*
-        Rect clipbounds = canvas.getClipBounds();
-        Log.d("Mapdroid", String.format("Clip bounds: %d,%d %d,%d", clipbounds.left, clipbounds.top, clipbounds.right, clipbounds.bottom));
-        */
-        // TODO: Calculate explicit tile numbers so we can request the adjacent tiles
-        //tileServer.requestTile(zoom, centerTile.getXTileNumber() + 1, centerTile.getYTileNumber(), messenger);
-
-        // FIXME: For now we just grab the center tile
-        //try {
-        //    centerTile = tileServer.getTile(zoom, mLat, mLong, messenger);
-        //    rightTile = tileServer.getTile(zoom, centerTile.getXTileNumber() + 1, centerTile.getYTileNumber(), messenger);
-        //} catch (java.io.IOException e) {
-            // TODO: Load a default "tile unavailable" tile
-            // For now, just return.
-        //    return;
-        //}
-        /*
-        if (drawTileOnCanvas(centerTile, canvas) != true)
-            Log.e("Mapdroid", "Failed to draw center tile");
-        if (drawTileOnCanvas(rightTile, canvas) != true)
-            Log.e("Mapdroid", "Failed to draw right tile");
-        */
     }
 
     public void onGpsStatusChanged(int event) {
