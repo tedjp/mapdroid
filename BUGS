@@ -1,0 +1,10 @@
+- Mapdroid crashes if you zoom in too far.
+- Source code does not have license headers nor LICENSE file.
+- The back button does not exit the application.
+- The in-memory tile cache's size is not bounded.
+- Using the volume control buttons is a really poor way to zoom.
+
+Wishlist:
+- Store map tiles on the SD card for offline use (Weston Weems,
+  Bernd Schnuermacher).
+- Multitouch (Weston Weems).
