@@ -153,7 +153,9 @@ public class Picker extends Activity
             return true;
         }
 
-        return false;
+        // Propagate to the default implementation to get regular back-button
+        // behavior.
+        return super.onKeyDown(keyCode, event);
     }
 
     public Location getLastLocation(Context ctx) {
