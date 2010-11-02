@@ -1,4 +1,3 @@
-- Mapdroid crashes if you zoom in too far.
 - The back button does not exit the application.
 - The in-memory tile cache's size is not bounded.
 - Using the volume control buttons is a really poor way to zoom.

@@ -76,11 +76,8 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
     }
 
     public void setZoom(int newzoom) {
-        if (newzoom < 0 || newzoom > tileServer.getMaxZoom()) {
-            throw new IllegalArgumentException(String.format(
-                        "zoom level \"%d\" is outside the supported range (0 - %d)",
-                        newzoom, tileServer.getMaxZoom()));
-        }
+        if (newzoom < 0 || newzoom > tileServer.getMaxZoom())
+            return;
 
         zoom = newzoom;
         recalculateCenterPixel();
