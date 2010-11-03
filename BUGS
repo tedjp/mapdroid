@@ -1,6 +1,11 @@
 - The in-memory tile cache's size is not bounded.
 - Using the volume control buttons is a really poor way to zoom.
 - Check for updates to cached tiles (Paolo Cavallini).
+- Tiles are fetched multiple times when translating if an outstanding
+  tile request has not yet returned.
+- Translating (moving) the image should not require the tiles to be
+  redrawn on each move - the image should be translated and new tiles
+  drawn when available.
 
 Wishlist:
 - Logo/icon (Ted Percival).
