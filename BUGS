@@ -1,7 +1,9 @@
 - The in-memory tile cache's size is not bounded.
 - Using the volume control buttons is a really poor way to zoom.
+- Check for updates to cached tiles (Paolo Cavallini).
 
 Wishlist:
+- Support network location source.
 - Logo/icon (Ted Percival).
 - Store map tiles on the SD card for offline use (Weston Weems,
   Bernd Schnuermacher).
