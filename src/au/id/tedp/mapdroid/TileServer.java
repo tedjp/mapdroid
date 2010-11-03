@@ -69,12 +69,10 @@ class TileServer extends Thread {
     protected boolean provideTileFromCache(int zoom, int x, int y, Messenger notify) {
         Tile tile = memTileCache.getTile(zoom, x, y);
 
-        if (tile == null) {
-            Log.d("Mapdroid", String.format("Tile %d,%d not provided from cache", x, y));
+        if (tile == null)
             return false;
-        }
 
-        Log.d("Mapdroid", String.format("Tile %d,%d PROVIDED FROM CACHE", x, y));
+        Log.d("Mapdroid", String.format("Requesting download of tile %d,%d", x, y));
 
         Message response = TileDownloader.buildNotification(tile, true);
         try {
@@ -88,8 +86,6 @@ class TileServer extends Thread {
     }
 
     public void requestTile(int zoom, int x, int y, Messenger notify) {
-        Log.d("Mapdroid", String.format("Requested tile %d,%d", x, y));
-
         if (provideTileFromCache(zoom, x, y, notify))
             return;
 
