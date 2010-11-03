@@ -27,10 +27,10 @@ class MemoryTileCache implements TileCache {
         tiles = new Hashtable<TileIdentifier, Tile>();
     }
 
-	synchronized public Tile getTile(int zoom, int x, int y) {
+    synchronized public Tile getTile(int zoom, int x, int y) {
         TileIdentifier id = new TileIdentifier(zoom, x, y);
         return tiles.get(id);
-	}
+    }
 
     synchronized public void add(Tile t) {
         TileIdentifier id = new TileIdentifier(
