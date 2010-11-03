@@ -1,6 +1,5 @@
 - The in-memory tile cache's size is not bounded.
 - Using the volume control buttons is a really poor way to zoom.
-- Start at a sensible location when first run after installation.
 
 Wishlist:
 - Logo/icon (Ted Percival).

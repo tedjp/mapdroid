@@ -78,10 +78,10 @@ public class Picker extends Activity
 
         SharedPreferences settings = getPreferences(MODE_PRIVATE);
 
-        // Default location: The Atlantic Ocean, somewhere between the
-        // United States and Europe
-        newLat = (float)25.0;
-        newLong = (float)-25.0;
+        // Default location: Germany, from a high zoom level.
+        // OpenStreetMap is big in Germany.
+        newLat = 52.5f;
+        newLong = 13.4f;
         newZoom = 2;
 
         if (savedState != null) {
@@ -96,7 +96,7 @@ public class Picker extends Activity
 
         OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
         map.setCenterCoords(newLat, newLong);
-        //map.setZoom(newZoom);
+        map.setZoom(newZoom);
         //updateLocationFields();
 
         //Debug.startMethodTracing("mapdroid");
