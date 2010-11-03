@@ -64,9 +64,6 @@ class OSMMapView extends View implements GpsStatus.Listener, LocationListener {
         motionHandler = new MotionHandler(this);
         gestureDetector = new GestureDetector(motionHandler);
         gestureDetector.setIsLongpressEnabled(false);
-        // XXX: Unnecessary, these should be removed unless they are advisory
-        setMinimumHeight(256);
-        setMinimumWidth(256);
         handler = new MapViewHandler();
         messenger = new Messenger(handler);
     }
