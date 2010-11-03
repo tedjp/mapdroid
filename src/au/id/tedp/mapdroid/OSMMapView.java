@@ -313,6 +313,9 @@ FIXME: use exceptions, dummy
         locmgr.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
                 0L, 0.0f, this);
+        locmgr.requestLocationUpdates(
+                LocationManager.NETWORK_PROVIDER,
+                0L, 0.0f, this);
 
         // XXX: Unnecessary
 //        locmgr.addGpsStatusListener(this);

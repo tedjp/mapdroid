@@ -56,6 +56,61 @@ public class Picker extends Activity
     public static final String SAVED_LONGITUDE_KEY = "map_center_longitude";
     public static final String SAVED_ZOOM_KEY = "map_zoom";
 
+    /* XXX: This should really be project-wide and all location-related code
+     * modified to adopt it. */
+    private class MapLocation extends Location {
+        private int mZoom;
+
+        public MapLocation(Location l, int zoom) {
+            super(l);
+            mZoom = zoom;
+        }
+
+        public int getZoom() {
+            return mZoom;
+        }
+
+        public void setZoom(int zoom) {
+            mZoom = zoom;
+        }
+
+        public float getLatitudeAsFloat() {
+            return (float)getLatitude();
+        }
+
+        public float getLongitudeAsFloat() {
+            return (float)getLongitude();
+        }
+    }
+
+    private MapLocation getInitialLocation(Bundle savedState) {
+        double newLat, newLong;
+        int newZoom;
+
+        // Default location: Germany, from a high zoom level.
+        // OpenStreetMap is big in Germany.
+        newLat = 52.5;
+        newLong = 13.4;
+        newZoom = 2;
+
+        SharedPreferences settings = getPreferences(MODE_PRIVATE);
+
+        if (savedState != null) {
+            newLat = savedState.getFloat(SAVED_LATITUDE_KEY, (float)newLat);
+            newLong = savedState.getFloat(SAVED_LONGITUDE_KEY, (float)newLong);
+            newZoom = savedState.getInt(SAVED_ZOOM_KEY, newZoom);
+        } else if (settings != null) {
+            newLat = settings.getFloat(SAVED_LATITUDE_KEY, (float)newLat);
+            newLong = settings.getFloat(SAVED_LONGITUDE_KEY, (float)newLong);
+            newZoom = settings.getInt(SAVED_ZOOM_KEY, newZoom);
+        }
+
+        MapLocation l = new MapLocation(new Location("default"), newZoom);
+        l.setLatitude(newLat);
+        l.setLongitude(newLong);
+        return l;
+    }
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedState)
@@ -63,43 +118,12 @@ public class Picker extends Activity
         super.onCreate(savedState);
         setContentView(R.layout.main);
 
-        /*
-        final Button btnFindRoute = (Button) findViewById(R.id.btnFindRoute);
-        btnFindRoute.setOnClickListener(new FindRouteButtonHandler());
-        */
-
-        // XXX: Use the location from the saved state
-        // Add a button to select the current location rather than
-        // setting it to the current location every time.
-        //prefill_fields((Context)this);
-
-        float newLat, newLong;
-        int newZoom;
-
-        SharedPreferences settings = getPreferences(MODE_PRIVATE);
-
-        // Default location: Germany, from a high zoom level.
-        // OpenStreetMap is big in Germany.
-        newLat = 52.5f;
-        newLong = 13.4f;
-        newZoom = 2;
-
-        if (savedState != null) {
-            newLat = savedState.getFloat(SAVED_LATITUDE_KEY, newLat);
-            newLong = savedState.getFloat(SAVED_LONGITUDE_KEY, newLong);
-            newZoom = savedState.getInt(SAVED_ZOOM_KEY, newZoom);
-        } else {
-            newLat = settings.getFloat(SAVED_LATITUDE_KEY, newLat);
-            newLong = settings.getFloat(SAVED_LONGITUDE_KEY, newLong);
-            newZoom = settings.getInt(SAVED_ZOOM_KEY, newZoom);
-        }
+        MapLocation initloc = getInitialLocation(savedState);
 
         OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
-        map.setCenterCoords(newLat, newLong);
-        map.setZoom(newZoom);
-        //updateLocationFields();
-
-        //Debug.startMethodTracing("mapdroid");
+        /* TODO: Combine these two set* calls */
+        map.setCenterCoords((float)initloc.getLatitude(), (float)initloc.getLongitude());
+        map.setZoom(initloc.getZoom());
     }
 
     @Override
@@ -113,6 +137,7 @@ public class Picker extends Activity
 
         ed.putFloat(SAVED_LATITUDE_KEY, map.getLatitude());
         ed.putFloat(SAVED_LONGITUDE_KEY, map.getLongitude());
+        ed.putInt(SAVED_ZOOM_KEY, map.getZoom());
         ed.commit();
 
         map.stopLocationUpdates(this);
@@ -159,21 +184,11 @@ public class Picker extends Activity
     }
 
     public Location getLastLocation(Context ctx) {
-        // XXX: Can this be static final?
-        Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-
         LocationManager locmgr = (LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE);
-
-        String bestProvider = locmgr.getBestProvider(criteria, true);
-        if (bestProvider == null)
-            return null;
-
-        Log.d("Mapdroid", "Found a fine location provider");
-
-        // XXX: Could be out-of-date or disabled
-        //return locmgr.getLastKnownLocation(bestProvider);
-        return locmgr.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location l = locmgr.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (l != null)
+            return l;
+        return locmgr.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
     }
 
     // We probably want to require high-res (GPS) location rather than low-res
@@ -210,6 +225,7 @@ public class Picker extends Activity
                 OSMMapView map = (OSMMapView) findViewById(R.id.mapView);
                 Log.d("MapView", map.toString());
                 map.setCenterCoords((float)loc.getLatitude(), (float)loc.getLongitude());
+                map.setZoom(15);
             }
             return true;
         }
