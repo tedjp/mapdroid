@@ -32,7 +32,10 @@
             </intent-filter>
         </activity>
     </application>
-    <uses-sdk minSdkVersion="2" />
+    <uses-sdk
+        android:minSdkVersion="2"
+        android:targetSdkVersion="17"
+    />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
